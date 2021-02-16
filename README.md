@@ -56,7 +56,7 @@ Client connects to server and subscribes:
 
 ### Subscription
 1. `Client` Connect
-2. `Server` Connect OK
+2. `Server` Connect ACK
 3. `Client` Subscribe *"topic"*
 4. `Server` Subscribe OK/NOT OK
 5. `Client` Starts listening
@@ -64,8 +64,8 @@ Client connects to server and subscribes:
 
 
 ### Publish
-1. `Client` Connect
-2. `Server` Connect OK
+1. `Client` Publish
+2. `Server` Publish ACK
 3. `Client` Publish *"message"* to *"topic"*
 4. `Server` Publish OK/NOT OK
 5. `Client` Disconnects
