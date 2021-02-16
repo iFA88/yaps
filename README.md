@@ -13,8 +13,10 @@
 - Always on, listening for new TCP connections.
 - Using *asyncio* instead of threading.
 - Stores state on disk (file or database).
-- Clients can subscribe to different *topics*.
-- When a new message is *published* to a specific *topic*, all subscribers of that topic is notified with the message.
+- Clients can subscribe to different `topics`.
+- When a new `message` is published to a specific `topic`, all subscribers of that topic is notified with the message.
+- *Pings* subscribers every *X* seconds.
+  - If a subscriber doesn't respond with *pong*, the server repeats the process *Y* times and then closes the connection.
 
 ## Topics
 Topics must follow:
@@ -32,7 +34,17 @@ Topics must follow:
 ## Client
 - Publish/Subscribe to different topics.
 - See what topics you're subscribed to
-- Is represented by unique **ID**, that is stored in disk at the client side.
+
+### Subscriber
+- Subscribe to a `topic`.
+- Identified by **ID** from TCP connection.
+- A subscriber waits for `messages` to be published.
+- The subscriber must respond to server *pings* if it wants to keep connected.
+
+### Publisher
+- Publishes a `message` on a given `topic`.
+- Can provide several flags:
+  - TODO
 
 Client connects to server and subscribes:
 - Server decides if new client or previous known. This is done by checking *(potential)* **ID**.
@@ -48,7 +60,7 @@ Client connects to server and subscribes:
 3. `Client` Subscribe *"topic"*
 4. `Server` Subscribe OK/NOT OK
 5. `Client` Starts listening
-6. `Server` pings `Client` every *X* seconds.
+6. `Server` *pings* `Client` every *X* seconds.
 
 
 ### Publish
@@ -58,3 +70,26 @@ Client connects to server and subscribes:
 4. `Server` Publish OK/NOT OK
 5. `Client` Disconnects
 6. `Server` Sends the messages to the topics.
+
+
+### Packet format
+| Byte | Data |
+| ---- | --- |
+| 0 | Command |
+| 1 | Flags |
+| 2-5 | Length of packet |
+| 6-* | Data |
+
+#### Commands:
+| Command | Value |
+| ---- | --- |
+| `publish` | |
+| `publish_ack` | |
+| `subscribe` | |
+| `subscribe_ack` | |
+| `new_data` | |
+| `new_data_ack` | |
+| `ping` | |
+| `pong` | |
+| `incorrect_format` | |
+
