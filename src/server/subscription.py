@@ -62,34 +62,48 @@ class Subscription:
         Log.debug(f'[{self.topic, self.fd}] Ping')
 
         pong = await protocol.read_packet(self._reader)
-        if not await protocol.cmd_ok(pong, protocol.Commands.PONG):
+        if await protocol.cmd_ok(pong, protocol.Commands.PONG):
+            # If PONG, reset timer.
+            self._time = 0
+        else:
+            # If no PONG, advance to next state, and potentially close.
             alive = self._next_state()
             if not alive:
                 self._alive = False
 
-    async def new_data(self, topic: str, message: str) -> None:
-        # Send new data to subscriber
-        await protocol.send_packet(self._writer, protocol.Commands.NEW_DATA)
+    async def new_data(self, message: str) -> bool:
+        """ Sends the new data to the subscriber.
+            Returns true if succesful, false if not.
+        """
+        send_ok = True
+        try:
+            # Send new data to subscriber
+            await protocol.send_packet(self._writer,
+                                       protocol.Commands.NEW_DATA,
+                                       data=message.encode('utf-8'))
 
-        # Wait for SUBSCRIBE_ACK
-        response = await protocol.read_packet(self._reader)
+            # Wait for SUBSCRIBE_ACK
+            response = await protocol.read_packet(self._reader)
+        except (BrokenPipeError, ConnectionResetError):
+            send_ok = False
 
         # If no ACK is recieved, close the connection.
         if not await protocol.cmd_ok(response, protocol.Commands.NEW_DATA_ACK,
                                      self._writer):
-            self.close()
+            send_ok = False
+            self.die()
 
         # Reset timer.
         self._time = 0
+        return send_ok
 
     def timed_out(self):
-        self._time > protocol.DELAY_PING_PONG
-
-    def close(self):
-        Log.debug(f'Closing connection: {self}')
-        self._alive = False
+        return self._time > protocol.PING_PONG_TIMEOUT
 
     def die(self):
+        if not self._alive:
+            return
+        self._alive = False
         Log.debug(f'Subscription died {self}')
 
     def _set_identifier(self, topic: str) -> None:
@@ -98,11 +112,11 @@ class Subscription:
             1. Topic
             2. File descripter number from reader/writer stream.
         """
-        self.topic = topic,
+        self.topic = topic
         self.fd = self._writer.get_extra_info('socket').fileno()
 
     def __repr__(self):
-        return self.topic, self.fd
+        return f'[ {self.topic}:  {self.fd} ]'
 
     def __lt__(self, other):
         return self._time - other._time
