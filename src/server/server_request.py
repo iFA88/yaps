@@ -3,33 +3,52 @@ import asyncio
 from subscription import Subscription
 from publication import Publication
 from api import protocol
-from api.packet import Packet
 from utils.log import Log
 
 
+class RequestResult:
+    """ Wrapper class for result. """
+    def __init__(self, result):
+        self.data = result
+
+    def __repr__(self):
+        return str(self.data)
+
+    def __eq__(self, other):
+        return type(self.data) == other
+
+
 class Request:
+    """
+        Handles a new tcp request and returns the appropiate result.
+        This class is invoked by the server upon a new request
+        and should not be used directly.
+    """
 
     def __init__(self, reader: asyncio.StreamReader,
                  writer: asyncio.StreamWriter):
         self._reader = reader
         self._writer = writer
 
-    async def respond(self):
+    async def respond(self) -> RequestResult:
         packet = await protocol.read_packet(self._reader)
+        result = None
 
-        if packet.cmd == protocol.Commands.PUBLISH:
-            await self._handle_publish()
+        if packet is None:
+            result = await self._handle_wrong_cmd()
+        elif packet.cmd == protocol.Commands.PUBLISH:
+            result = await self._handle_publish()
         elif packet.cmd == protocol.Commands.SUBSCRIBE:
-            await self._handle_subscribe()
-        else:
-            await self._handle_wrong_cmd()
+            result = await self._handle_subscribe()
+
+        return RequestResult(result)
 
     async def _handle_publish(self) -> Publication:
-        Log.debug('[Server] Pub')
-        # Publish ACK
+        # Log.debug('Server: PUB')
+        # Send: Publish ACK
         await protocol.send_packet(self._writer, protocol.Commands.PUBLISH_ACK)
 
-        # Publish 'message' to 'topic'
+        # Receive: Publish + Data ('topic' | 'message')
         packet = await protocol.read_packet(self._reader)
         if not await protocol.cmd_ok(packet, protocol.Commands.PUBLISH,
                                      self._writer):
@@ -40,15 +59,19 @@ class Request:
         # Ensure publish is OK according to the format required.
         if not protocol.publish_ok(data):
             Log.debug(f'[Server] Pub -> Publish "{data}" is incorrect format.')
+            await protocol.send_packet(self._writer,
+                                       protocol.Commands.INCORRECT_FORMAT)
             return None
-
-        Log.debug(f'[Server] Pub -> {data}')
 
         # Publish OK
         await protocol.send_packet(self._writer, protocol.Commands.PUBLISH_OK)
 
         topic, message = protocol.get_topic_and_msg(data)
-        return Publication(topic, message)
+        publication = Publication(topic, message)
+
+        Log.info(f'[Server] New Pub: "{publication}"')
+
+        return publication
 
     async def _handle_subscribe(self) -> Subscription:
         Log.debug('[Server] Sub')
@@ -80,4 +103,3 @@ class Request:
 
     async def _handle_wrong_cmd(self):
         Log.debug('[Server] Wrong cmd')
-
