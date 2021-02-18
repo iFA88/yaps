@@ -1,6 +1,6 @@
-# VQTT - A MQTT-like protocol
-- *VQTT* will be a publish-subscribe protocol running over TCP/IP.
-- Very much inspired by MQTT
+# YAPS - Yet Another Publish Subscribe protocol
+- *YAPS* will be a publish-subscribe protocol running over TCP/IP.
+- Inspired by MQTT
 
 ### Objectives
 - Create a functional publish-subscribe protocol that is easy to use.
@@ -79,6 +79,9 @@ Client connects to server and subscribes:
 | 1 | Flags |
 | 2-5 | Length of packet |
 | 6-* | Data |
+
+If the command is publish, `Data` consists of `topic` | `message`, where a
+pipe `|`, seperated the topic from the message.
 
 #### Commands:
 | Command | Value |
