@@ -1,53 +1,48 @@
 import unittest
+import asyncio
+import async_timeout
 
-from ..src.client import Client
+from client.client import Client
+from utils.log import Log
+from utils.config import Config
 
-IP = '127.0.0.1'
-PORT = 9889
+
+TEST_TIMEOUT = .2
 
 
-class TestSubscribe(unittest.TestCase):
+class TestSubscribe(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
-        self.con = Client(IP, PORT)
-        self.con.connect()
+        Log.init()
+        self.ip = Config.get()['client']['ip']
+        self.port = Config.get()['client']['port']
+        self.client = Client(self.ip, self.port)
 
-    def tearDown(self):
-        self.con.unsubscribe_all()
-        self.con.disconnect()
+    async def test_one_sub(self):
+        await self._test_one_sub('test', 'hello world')
 
-    def _sub(self, topics: list) -> None:
-        for topic in topics:
-            for t in [f'{topic}', f'/{topic}', f'{topic}/', f'/{topic}/']:
-                self.con.subscribe(t)
+    async def test_five_subs(self):
+        data = ['asd123', 'cookiemonster', '  stuff -> stuff',
+                '{}ªßðªø¡@£ł', '\r\n\\a\\«\\»cSTUFF\rr']
+        for msg in data:
+            await self._test_one_sub('test', msg)
 
-    def _unsub(self, topics: list) -> None:
-        for topic in topics:
-            self.con.unsubscribe(topic)
+    async def _test_one_sub(self, topic, expected):
+        try:
+            with async_timeout.timeout(TEST_TIMEOUT):
+                callback = lambda actual: self.assertNewData(expected, actual)   # noqa
+                await asyncio.gather(self.client.subscribe(topic, callback),
+                                     self.client.publish('test', expected))
+        except asyncio.exceptions.TimeoutError:
+            pass
 
-    def _test_sub(self, topics):
-        self._sub(topics)
-        self.assertEqual(self.con.get_subscriptions(), topics)
+    def assertNewData(self, expected: str, actual: str):
+        self.assertEqual(expected, actual,
+                         f'Expected "{expected}"" but got "{actual}"')
 
-    def _test_unsub(self, topics):
-        self._sub(topics)
-        self._unsub(topics)
-        self.assertEqual(self.con.get_subscriptions(), [])
+    async def publish(self):
+        self.assertTrue(await self.client.publish('test', 'hello world'))
 
-    def test_sub_to_1_topic(self):
-        self._test_sub(['weather'])
 
-    def test_sub_to_2_topic(self):
-        self._test_sub(['weather', 'kitchen'])
-
-    def test_sub_to_5_topics(self):
-        self._test_sub(['weather', 'kitchen', 'animals', 'farms', 'car'])
-
-    def test_unsub_to_1(self):
-        self._test_unsub(['weather'])
-
-    def test_unsub_to_2(self):
-        self._test_unsub(['weather', 'kitchen'])
-
-    def test_unsub_to_5(self):
-        self._test_unsub(['weather', 'kitchen', 'animals', 'farms', 'car'])
+if __name__ == '__main__':
+    unittest.main()
