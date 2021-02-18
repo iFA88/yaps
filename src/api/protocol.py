@@ -7,25 +7,31 @@ from api.packet import Packet
 
 
 __all__ = ['Commands', 'read_packet', 'send_packet', 'DELAY_PING_PONG',
-           'topic_ok', 'publish_ok']
+           'PING_PONG_TIMEOUT', 'topic_ok', 'publish_ok']
 
 
 DELAY_PING_PONG = 1
-RE_TOPIC_FORMAT = re.compile('.*')
-RE_PUBLISH_FORMAT = re.compile('.*')
+PING_PONG_TIMEOUT = 10
+
+# Regex Formats
+TOPIC_FORMAT = '[a-zA-Z0-9]+[a-zA-Z0-9/]*'
+MESSAGE_FORMAT = '.*'
+RE_TOPIC_FORMAT = re.compile(TOPIC_FORMAT)
+RE_PUBLISH_FORMAT = re.compile(f'{TOPIC_FORMAT} *\| *{MESSAGE_FORMAT}',
+                               flags=re.DOTALL)
 
 
 class Formats:
     CMD = 'B'
     FLAGS = 'B'
     LENGTH = 'I'
-    HEADER = f'{CMD}{FLAGS}{LENGTH}'
+    HEADER = f'={CMD}{FLAGS}{LENGTH}'
 
 
 class Sizes:
-    CMD = struct.calcsize(Formats.CMD)
-    FLAGS = struct.calcsize(Formats.FLAGS)
-    LENGTH = struct.calcsize(Formats.LENGTH)
+    CMD = struct.calcsize(f'={Formats.CMD}')
+    FLAGS = struct.calcsize(f'={Formats.FLAGS}')
+    LENGTH = struct.calcsize(f'={Formats.LENGTH}')
     HEADER = struct.calcsize(Formats.HEADER)
 
 
@@ -48,11 +54,13 @@ class Commands:
 async def read_packet(reader: asyncio.StreamReader) -> Packet:
     try:
         header = await reader.read(Sizes.HEADER)
+        # Log.debug(f'Header: {header}')
         cmd, flags, length = unpack_header(header)
+        # Log.debug(f'CMD: {cmd} Flags: {flags} Lengt: {length}')
         data = await reader.read(length)
         return Packet(cmd, flags, length, data)
     except struct.error as e:
-        Log.err(f'Failed to read packet: {e}')
+        Log.debug(f'Failed to read packet: {e}')
         return None
 
 
@@ -64,7 +72,7 @@ async def send_packet(writer: asyncio.StreamWriter,
                       cmd: int, flags: int = 0, data: bytes = b'') -> None:
     packet = Packet(cmd, flags, len(data), data, Formats.HEADER)
 
-    #Log.debug(f'Sending packet: {packet}')
+    # Log.debug(f'Sending packet: {packet}')
 
     writer.write(packet.to_bytes())
     await writer.drain()
@@ -84,7 +92,7 @@ async def cmd_ok(packet: Packet,
     """
     ok = True
     if packet is None:
-        Log.err('Failed to read packet!')
+        Log.debug('Failed to read packet!')
         ok = False
     elif packet.cmd != cmd:
         Log.err('Packet command incorrect!'
@@ -105,9 +113,10 @@ def publish_ok(data: str) -> bool:
 
 
 def get_topic_and_msg(data: str) -> (str, str):
-    return data.split('|')
+    return [part.strip() for part in data.split('|')]
 
 
 if __name__ == '__main__':
     Log.init()
-    #asyncio.run(tcp_echo_client('Hello World!'))
+    # asyncio.run(tcp_echo_client('Hello World!'))
+    print(RE_PUBLISH_FORMAT.search('TestMsg | /0789/'))
