@@ -1,30 +1,32 @@
 from api.base_connection import BaseConnection
 from api import protocol
-from utils.config import Config
-from utils.log import Log
 
 
 class Publish(BaseConnection):
 
-    def __init__(self, topic, message, ip=None, port=None, flags=None):
-        ip = Config.get()['client']['ip'] if ip is None else ip
-        port = Config.get()['client']['port'] if port is None else port
-        self.topic = topic
-        self.message = message
+    def __init__(self, ip: str, port: int, flags=None):
         super().__init__(ip, port)
 
-    async def start(self):
+    async def start(self, topic: str, message: str) -> bool:
+        # Send: Publish
         await self.open()
-
         await self.send(protocol.Commands.PUBLISH)
 
-        response = await self.read()
-        if not self._cmd_ok(response, protocol.Commands.PUBLISH_ACK):
-            return
+        # Receive: Publish ACK
+        packet = await self.read()
+        if not await protocol.cmd_ok(packet, protocol.Commands.PUBLISH_ACK,
+                                     self._writer):
+            return False
 
-        data = f'{self.topic} | {self.message}'.encode('utf-8')
+        # Send: Publish + Data
+        data = f'{topic} | {message}'.encode('utf-8')
         await self.send(protocol.Commands.PUBLISH, data=data)
 
-        Log.info(f'Published "{self.message}" to topic "{self.topic}"')
+        # Receive: Publish OK
+        pub_ack = await self.read()
+        if not await protocol.cmd_ok(pub_ack, protocol.Commands.PUBLISH_OK):
+            return False
 
         await self.close()
+
+        return True
