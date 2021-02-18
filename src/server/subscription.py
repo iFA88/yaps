@@ -14,6 +14,12 @@ class State:
 
 
 class Subscription:
+    """
+        Abstraction for handling a subscription.
+        This class has utilites that lets it increment a counter and indicate
+        if it has timed out or not.
+        It can also send new data to the subscriber.
+    """
 
     def __init__(self,
                  topic: str,
