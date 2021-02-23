@@ -1,5 +1,11 @@
-from subscription import Subscription
+try:
+    from subscription import Subscription
+except ModuleNotFoundError:
+    from server.subscription import Subscription
 from utils.log import Log
+
+
+TOPIC_WILDCARD = '*'
 
 
 class SubscriptionContainer:
@@ -17,6 +23,7 @@ class SubscriptionContainer:
 
     def __init__(self):
         self._subscriptions = {}
+        self._wildcards = {}
 
     def get_all(self) -> set:
         all_subs = set()
@@ -24,8 +31,39 @@ class SubscriptionContainer:
             all_subs.update(subs)
         return all_subs
 
-    def get(self, topic: str) -> set:
-        return self._subscriptions.get(topic, set())
+    def get(self, sub_topic: str) -> list:
+        """ Returns all subscriptions subscribed to the given topic. """
+        # Using helper method to get all subs because wildcards make it
+        # slightly harder than just getting them from dictionary.
+        subscriptions = []
+        for topic, subs in self._subscriptions.items():
+            if self._topic_match(sub_topic, topic):
+                subscriptions.append(*subs)
+
+        print(subscriptions)
+        return subscriptions
+
+    def _topic_match(self, topic: str, pattern: str) -> bool:
+        """ Checks wether "pattern" matches the "topic".
+            This is a helper method to decide if a subscriber
+            is subscribing to a certain topic, since wildcards
+            can be used.
+        """
+
+        # Ensure that the depths of the topics match.
+        real_topic = topic.split('/')
+        pattern_topic = pattern.split('/')
+        if len(real_topic) != len(pattern_topic):
+            return False
+
+        # Check that every part of the topic matches and ignore if wildcard.
+        for real_part, part in zip(real_topic, pattern_topic):
+            if part == TOPIC_WILDCARD:
+                continue
+            elif part != real_part:
+                return False
+
+        return True
 
     def add(self, subscription: Subscription) -> None:
         topic = subscription.topic
