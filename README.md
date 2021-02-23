@@ -10,13 +10,16 @@
 - (*Bonus*) Web interface, something like Node-red.
 
 ## Todos:
-- [ X ] Client state
-- [ X ] Subscription object
-- [ X ] Turn off logging during tests
-- [ X ] Enable wildcard subscribe
-- [  ] Configuration file location
-- [  ] Create pip package
-- [  ] *Server UI*
+- [X] Client state
+- [X] Subscription object
+- [X] Turn off logging during tests
+- [X] Enable wildcard subscribe
+- [ ] Configuration file location
+- [ ] Create pip package
+- [ ] Do performance tests
+- [ ] Find use cases
+- [ ] *Create stress tests*
+- [ ] *Build a Server UI*
 
 ## Server
 - Always on, listening for new TCP connections.
