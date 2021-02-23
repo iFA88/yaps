@@ -8,6 +8,7 @@ from utils.config import Config
 from utils.log import Log
 
 
+NAME = 'YAPS'
 MAKE_PING_DELAY = 1     # In seconds.
 
 
@@ -29,10 +30,15 @@ class Server:
             while not self._ping_pong_tasks.empty():
                 try:
                     subscriber = await self._ping_pong_tasks.get()
-                    await subscriber.ping()
+                    if subscriber.is_dead():
+                        self._delete_subscription(subscriber)
+                    else:
+                        await subscriber.ping()
+
                 except (ConnectionResetError, BrokenPipeError):
                     Log.err(f'Connection unexpectedly closed {subscriber}')
                     self._delete_subscription(subscriber)
+
                 finally:
                     # We want to remove the task from the queue regardless
                     # if it fails or completes.
@@ -42,7 +48,8 @@ class Server:
             await asyncio.sleep(MAKE_PING_DELAY)
 
     async def _check_timeouts(self):
-        """ Checks all the subscribers to see if their timer has timed out
+        """
+            Checks all the subscribers to see if their timer has timed out
             and puts all the timed out ones in the priority queue.
         """
         subs = self._subscriptions.get_all()
@@ -54,9 +61,15 @@ class Server:
         """ Sends the publication to all the subscribers of the topic. """
         subs = self._subscriptions.get(publication.topic)
         for sub in subs.copy():
-            pub_ok = await sub.new_data(publication.message)
-            if not pub_ok:
-                self._delete_subscription(sub)
+            try:
+                pub_ok = await sub.new_data(publication.message)
+                if not pub_ok:
+                    self._delete_subscription(sub)
+            except RuntimeError:
+                # This error is caused: RuntimeError: read() called while
+                # another coroutine is already waiting for incoming data.
+                # Should not do any harm, so therefore ignored.
+                pass
 
     def _delete_subscription(self, subscription: Subscription) -> None:
         self._subscriptions.delete(subscription)
@@ -86,7 +99,8 @@ class Server:
         """ Starts the server. This method runs forever. """
         server = await asyncio.start_server(self._request_handler,
                                             self._ip, self._port)
-        Log.info(f'Server started at {server.sockets[0].getsockname()}')
+        ip, port = server.sockets[0].getsockname()
+        Log.info(f'{NAME} Server started at {ip} on port {port}')
 
         async with server:
             await asyncio.gather(self._make_pings(),
