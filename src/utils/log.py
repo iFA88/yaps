@@ -13,10 +13,14 @@ LOG_PATH = os.path.join(BASE_PATH, 'log')
 class Log:
 
     _stream = None
+    _disabled = False
 
     def _ensure_log_exists() -> None:
         if not os.path.exists(os.path.dirname(LOG_PATH)):
             os.makedirs(os.path.dirname(LOG_PATH))
+
+    def disable() -> None:
+        Log._disabled = True
 
     def close() -> None:
         if Log._stream is not None:
@@ -45,12 +49,16 @@ class Log:
 
     @staticmethod
     def info(msg: str) -> None:
-        _log.info(msg)
+        if not Log._disabled:
+            print(msg)
+            _log.info(msg)
 
     @staticmethod
     def err(msg: str) -> None:
-        _log.error(msg)
+        if not Log._disabled:
+            _log.error(msg)
 
     @staticmethod
     def debug(msg: str) -> None:
-        _log.debug(msg)
+        if not Log._disabled:
+            _log.debug(msg)
