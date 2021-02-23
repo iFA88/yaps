@@ -2,12 +2,21 @@
 - *YAPS* will be a publish-subscribe protocol running over TCP/IP.
 - Inspired by MQTT
 
-### Objectives
+## Objectives
 - Create a functional publish-subscribe protocol that is easy to use.
 - It should have a simple cli interface.
 - Practise coding a bigger project and keeping it structured.
 - Practise documenting a bigger project.
 - (*Bonus*) Web interface, something like Node-red.
+
+## Todos:
+- [ X ] Client state
+- [ X ] Subscription object
+- [ X ] Turn off logging during tests
+- [ X ] Enable wildcard subscribe
+- [  ] Configuration file location
+- [  ] Create pip package
+- [  ] *Server UI*
 
 ## Server
 - Always on, listening for new TCP connections.
