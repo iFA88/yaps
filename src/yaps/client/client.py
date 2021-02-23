@@ -1,6 +1,6 @@
-from client.publish import Publish
-from client.subscribe import Subscribe
-from utils.log import Log
+from yaps.client.publish import Publish
+from yaps.client.subscribe import Subscribe
+from yaps.utils.log import Log
 
 
 class Client:
@@ -14,7 +14,7 @@ class Client:
         """ Throws ConnectionRefusedError. """
         sub = Subscribe(self._ip, self._port, data_received)
 
-        Log.info(f'Subscribing to "{topic}"')
+        Log.info(f'[Client] Subscribing to "{topic}"')
         await sub.start(topic)
 
     async def publish(self, topic: str, message: str) -> bool:
@@ -23,9 +23,17 @@ class Client:
             Throws ConnectionRefusedError.
         """
         publish = Publish(self._ip, self._port)
-        pub_ok = await publish.start(topic, message)
+        try:
+            pub_ok = await publish.start(topic, message)
+        except ConnectionRefusedError:
+            Log.err(f'[Client ]Failed to connect to server {self._ip} '
+                    f'on port {self._port}')
+            return
 
         if pub_ok:
-            Log.info(f'Published "{message}" to topic "{topic}"')
+            Log.info(f'[Client] Published "{message}" to topic "{topic}"')
+        else:
+            Log.info(f'[Client] Failed to publish "{message}" to'
+                     f' topic "{topic}"')
 
         return pub_ok

@@ -9,6 +9,8 @@ _log = logging.getLogger(__name__)
 BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 LOG_PATH = os.path.join(BASE_PATH, 'log')
 
+DEFAULT_DEBUG_LEVEL = logging.DEBUG
+
 
 class Log:
 
@@ -31,7 +33,7 @@ class Log:
         try:
             debug_level = configs['debug_level']
         except (KeyError, TypeError):
-            debug_level = logging.DEBUG
+            debug_level = DEFAULT_DEBUG_LEVEL
 
         Log._ensure_log_exists()
 

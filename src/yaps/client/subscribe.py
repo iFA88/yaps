@@ -1,8 +1,8 @@
 import asyncio
 
-from api.base_connection import BaseConnection
-from api import protocol
-from utils.log import Log
+from yaps.api.base_connection import BaseConnection
+from yaps.api import protocol
+from yaps.utils.log import Log
 
 
 SLEEP_DELAY = 1      # In seconds.

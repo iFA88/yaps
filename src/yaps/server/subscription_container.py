@@ -1,8 +1,8 @@
 try:
     from subscription import Subscription
 except ModuleNotFoundError:
-    from server.subscription import Subscription
-from utils.log import Log
+    from yaps.server.subscription import Subscription
+from yaps.utils.log import Log
 
 
 TOPIC_WILDCARD = '*'
@@ -38,9 +38,7 @@ class SubscriptionContainer:
         subscriptions = []
         for topic, subs in self._subscriptions.items():
             if self._topic_match(sub_topic, topic):
-                subscriptions.append(*subs)
-
-        print(subscriptions)
+                subscriptions.extend(subs)
         return subscriptions
 
     def _topic_match(self, topic: str, pattern: str) -> bool:

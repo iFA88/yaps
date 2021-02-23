@@ -1,15 +1,18 @@
 import asyncio
 
-from subscription import Subscription
-from publication import Publication
-from subscription_container import SubscriptionContainer
-from server_request import Request, RequestResult
-from utils.config import Config
-from utils.log import Log
+from yaps.server.subscription import Subscription
+from yaps.server.publication import Publication
+from yaps.server.subscription_container import SubscriptionContainer
+from yaps.server.server_request import Request, RequestResult
+from yaps.utils.config import Config
+from yaps.utils.log import Log
 
 
 NAME = 'YAPS'
 MAKE_PING_DELAY = 1     # In seconds.
+
+DEFAULT_IP = '127.0.0.1'
+DEFAULT_PORT = 8999
 
 
 class Server:
@@ -107,8 +110,16 @@ class Server:
                                  server.serve_forever())
 
 
+def get_address():
+    try:
+        return (Config.get()['server']['ip'],
+                Config.get()['server']['port'])
+    except (TypeError, KeyError):
+        return DEFAULT_IP, DEFAULT_PORT
+
+
 if __name__ == '__main__':
     Log.init()
-    server = Server(Config.get()['server']['ip'],
-                    Config.get()['server']['port'])
+    ip, port = get_address()
+    server = Server(ip, port)
     asyncio.run(server.start())

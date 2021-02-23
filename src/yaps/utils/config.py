@@ -1,8 +1,7 @@
 import json
 import os
 
-
-from utils.log import Log
+from yaps.utils.log import Log
 
 
 __all__ = ['Config']
@@ -18,7 +17,7 @@ class Config:
     @staticmethod
     def get() -> dict:
         """ Returns the config file and none if an error occurs. """
-        config = None
+        config = {}
 
         try:
             with open(CONFIG_PATH, 'rb') as f:
@@ -29,9 +28,3 @@ class Config:
             Log.err(f'Failed to parse JSON {e}')
 
         return config
-
-
-if __name__ == '__main__':
-    Log.init()
-    Config.get()
-    Log.close()

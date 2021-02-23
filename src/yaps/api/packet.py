@@ -2,6 +2,12 @@ import struct
 
 
 class Packet:
+    """
+        Represents a packet in the YAPS protocol.
+        Packet format is the following:
+        |    0    |   1   |     2-5     |  6+  |
+        | Command | Flags | Data length | Data |
+    """
 
     def __init__(self, cmd: int, flags: int, length: int, data: bytes,
                  fmt: str = None):

@@ -2,8 +2,8 @@ import asyncio
 import re
 import struct
 
-from utils.log import Log
-from api.packet import Packet
+from yaps.utils.log import Log
+from yaps.api.packet import Packet
 
 
 __all__ = ['Commands', 'read_packet', 'send_packet', 'DELAY_PING_PONG',
@@ -20,8 +20,12 @@ RE_TOPIC_FORMAT = re.compile(TOPIC_FORMAT)
 RE_PUBLISH_FORMAT = re.compile(f'{TOPIC_FORMAT} *\| *{MESSAGE_FORMAT}', # noqa
                                flags=re.DOTALL)
 
-
+# Used for struct to calcucate correct packet size.
 LITTLE_ENDIAN = '>'
+
+# Used for debugging. This list is filled in build_debug_commands() function.
+DEBUG_COMMANDS = {}
+commands_built = False
 
 
 class Formats:
@@ -52,6 +56,18 @@ class Commands:
     INCORRECT_FORMAT = 8
     BAD_CMD = 9
     # End of commands
+
+
+def build_debug_commands():
+    global DEBUG_COMMANDS
+    commands = list(filter(lambda attr: not attr.startswith('_'),
+                           dir(Commands)))
+    values = [getattr(Commands, cmd) for cmd in commands]
+    DEBUG_COMMANDS = {value: cmd for value, cmd in zip(values, commands)}
+
+
+# Build debug commands
+build_debug_commands()
 
 
 async def read_packet(reader: asyncio.StreamReader) -> Packet:
@@ -100,8 +116,9 @@ async def cmd_ok(packet: Packet,
         Log.debug('Failed to read packet!')
         ok = False
     elif packet.cmd != cmd:
-        Log.err('Packet command incorrect!'
-                f'Expected: {cmd}, Got: {packet.cmd}')
+        Log.err('Packet command incorrect! '
+                f'Expected: "{DEBUG_COMMANDS[cmd]}", '
+                f'Got: "{DEBUG_COMMANDS[packet.cmd]}"')
         if writer is not None:
             await send_packet(writer, Commands.BAD_CMD)
         ok = False
@@ -119,9 +136,3 @@ def publish_ok(data: str) -> bool:
 
 def get_topic_and_msg(data: str) -> (str, str):
     return [part.strip() for part in data.split('|')]
-
-
-if __name__ == '__main__':
-    Log.init()
-    # asyncio.run(tcp_echo_client('Hello World!'))
-    print(RE_PUBLISH_FORMAT.search('TestMsg | /0789/'))

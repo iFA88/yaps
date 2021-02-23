@@ -1,5 +1,5 @@
-from api.base_connection import BaseConnection
-from api import protocol
+from yaps.api.base_connection import BaseConnection
+from yaps.api import protocol
 
 
 class Publish(BaseConnection):

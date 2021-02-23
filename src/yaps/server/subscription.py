@@ -1,7 +1,7 @@
 import asyncio
 
-from api import protocol
-from utils.log import Log
+from yaps.api import protocol
+from yaps.utils.log import Log
 
 
 SLEEP_SLOT_TIME = 1         # In seconds.
