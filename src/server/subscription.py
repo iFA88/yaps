@@ -10,7 +10,7 @@ SLEEP_SLOT_TIME = 1         # In seconds.
 class State:
     PING_PONG = 1
     PING_PONG_1_MISS = 2
-    PING_PONG_2_MISS = 2
+    PING_PONG_2_MISS = 3
 
 
 class Subscription:
@@ -72,10 +72,11 @@ class Subscription:
             # If PONG, reset timer.
             self._time = 0
         else:
+            print(f'Bad ping! {self._alive} -> {self._state}')
             # If no PONG, advance to next state, and potentially close.
             alive = self._next_state()
             if not alive:
-                self._alive = False
+                self.die()
 
     async def new_data(self, message: str) -> bool:
         """ Sends the new data to the subscriber.
@@ -93,10 +94,14 @@ class Subscription:
         except (BrokenPipeError, ConnectionResetError):
             send_ok = False
 
-        # If no ACK is recieved, close the connection.
-        if not await protocol.cmd_ok(response, protocol.Commands.NEW_DATA_ACK,
-                                     self._writer):
-            send_ok = False
+        if send_ok:
+            # If no ACK is recieved, close the connection.
+            if not await protocol.cmd_ok(response,
+                                         protocol.Commands.NEW_DATA_ACK,
+                                         self._writer):
+                send_ok = False
+
+        if not send_ok:
             self.die()
 
         # Reset timer.
@@ -106,7 +111,10 @@ class Subscription:
     def timed_out(self):
         return self._time > protocol.PING_PONG_TIMEOUT
 
-    def die(self):
+    def is_dead(self) -> bool:
+        return not self._alive
+
+    def die(self) -> None:
         if not self._alive:
             return
         self._alive = False
@@ -119,10 +127,15 @@ class Subscription:
             2. File descripter number from reader/writer stream.
         """
         self.topic = topic
-        self.fd = self._writer.get_extra_info('socket').fileno()
+        try:
+            self.fd = self._writer.get_extra_info('socket').fileno()
+        except AttributeError:
+            # Streams are incorrect
+            Log.err(f'Incorrect streams to subscription to {self.topic}')
+            self.fd = None
 
     def __repr__(self):
-        return f'[ {self.topic}:  {self.fd} ]'
+        return f'|{self.topic}:  {self.fd}|'
 
     def __lt__(self, other):
         return self._time - other._time
