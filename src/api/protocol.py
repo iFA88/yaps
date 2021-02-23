@@ -11,27 +11,30 @@ __all__ = ['Commands', 'read_packet', 'send_packet', 'DELAY_PING_PONG',
 
 
 DELAY_PING_PONG = 1
-PING_PONG_TIMEOUT = 10
+PING_PONG_TIMEOUT = 2
 
 # Regex Formats
 TOPIC_FORMAT = '[a-zA-Z0-9]+[a-zA-Z0-9/]*'
 MESSAGE_FORMAT = '.*'
 RE_TOPIC_FORMAT = re.compile(TOPIC_FORMAT)
-RE_PUBLISH_FORMAT = re.compile(f'{TOPIC_FORMAT} *\| *{MESSAGE_FORMAT}',
+RE_PUBLISH_FORMAT = re.compile(f'{TOPIC_FORMAT} *\| *{MESSAGE_FORMAT}', # noqa
                                flags=re.DOTALL)
+
+
+LITTLE_ENDIAN = '>'
 
 
 class Formats:
     CMD = 'B'
     FLAGS = 'B'
     LENGTH = 'I'
-    HEADER = f'={CMD}{FLAGS}{LENGTH}'
+    HEADER = f'{LITTLE_ENDIAN}{CMD}{FLAGS}{LENGTH}'
 
 
 class Sizes:
     CMD = struct.calcsize(f'={Formats.CMD}')
     FLAGS = struct.calcsize(f'={Formats.FLAGS}')
-    LENGTH = struct.calcsize(f'={Formats.LENGTH}')
+    LENGTH = struct.calcsize(f'{LITTLE_ENDIAN}{Formats.LENGTH}')
     HEADER = struct.calcsize(Formats.HEADER)
 
 
@@ -62,6 +65,8 @@ async def read_packet(reader: asyncio.StreamReader) -> Packet:
     except struct.error as e:
         Log.debug(f'Failed to read packet: {e}')
         return None
+    except RuntimeError:
+        Log.debug('Race condition reading packet.')
 
 
 def unpack_header(header: bytes) -> (int, int, int):
