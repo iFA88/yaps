@@ -14,8 +14,9 @@
 - [X] Subscription object
 - [X] Turn off logging during tests
 - [X] Enable wildcard subscribe
-- [ ] Configuration file location
-- [ ] Create pip package
+- [X] Configuration file location
+- [X] Create pip package
+- [ ] Fix import & paths with pip-package
 - [ ] Do performance tests
 - [ ] Find use cases
 - [ ] *Create stress tests*
