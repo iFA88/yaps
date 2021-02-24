@@ -1,14 +1,25 @@
 import logging
 import os
+import sys
 
+from . import BASE_PATH
 
 __all__ = ['Log']
 
 
-_log = logging.getLogger(__name__)
-BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-LOG_PATH = os.path.join(BASE_PATH, 'log')
+_log = logging.getLogger()
+LOG_PATH_SERVER = os.path.join(BASE_PATH, 'server.log')
+LOG_PATH_CLIENT = os.path.join(BASE_PATH, 'client.log')
 
+# Used to convert cli params
+DEBUG_LEVELS = {
+    'notset': logging.NOTSET,
+    'debug': logging.DEBUG,
+    'info': logging.INFO,
+    'warning': logging.WARNING,
+    'error': logging.ERROR,
+    'critical': logging.CRITICAL,
+}
 DEFAULT_DEBUG_LEVEL = logging.DEBUG
 
 
@@ -17,43 +28,65 @@ class Log:
     _stream = None
     _disabled = False
 
-    def _ensure_log_exists() -> None:
-        if not os.path.exists(os.path.dirname(LOG_PATH)):
-            os.makedirs(os.path.dirname(LOG_PATH))
+    @staticmethod
+    def _ensure_logdir_exists() -> None:
+        if not os.path.exists(os.path.dirname(LOG_PATH_SERVER)):
+            os.makedirs(os.path.dirname(LOG_PATH_SERVER))
 
+    @staticmethod
     def disable() -> None:
         Log._disabled = True
 
+    @staticmethod
     def close() -> None:
         if Log._stream is not None:
             Log._stream.close()
             Log._strema = None
 
-    def init(configs: dict = None) -> None:
-        try:
-            debug_level = configs['debug_level']
-        except (KeyError, TypeError):
-            debug_level = DEFAULT_DEBUG_LEVEL
+    @staticmethod
+    def init(server: bool = True, debug_level: str = None) -> None:
+        debug_level = DEBUG_LEVELS.get(debug_level, DEFAULT_DEBUG_LEVEL)
 
-        Log._ensure_log_exists()
+        Log._ensure_logdir_exists()
 
         # Open stream to file to give to streamhandler.
-        Log._stream = open(LOG_PATH, 'w')
+        log_path = LOG_PATH_SERVER if server else LOG_PATH_CLIENT
+        Log._stream = open(log_path, 'a')
         ch = logging.StreamHandler(Log._stream)
 
         # Set log levels and formats.
         _log.setLevel(debug_level)
         formatter = logging.Formatter('%(asctime)s [%(levelname)s]'
                                       ' - %(message)s',
-                                      datefmt='%Y-%M-%d %H:%M:%S')
+                                      datefmt='%Y-%m-%d %H:%M:%S')
+
+        # Add stdout stream
+        stdin_handler = logging.StreamHandler(sys.stdout)
+
+        stdin_handler.setFormatter(formatter)
         ch.setFormatter(formatter)
+
+        _log.addHandler(stdin_handler)
         _log.addHandler(ch)
+
+    @staticmethod
+    def set_level(debug_level: str = None) -> None:
+        _log.setLevel(DEBUG_LEVELS.get(debug_level, DEFAULT_DEBUG_LEVEL))
 
     @staticmethod
     def info(msg: str) -> None:
         if not Log._disabled:
-            print(msg)
             _log.info(msg)
+
+    @staticmethod
+    def warning(msg: str) -> None:
+        if not Log._disabled:
+            _log.warning(msg)
+
+    @staticmethod
+    def critical(msg: str) -> None:
+        if not Log._disabled:
+            _log.critical(msg)
 
     @staticmethod
     def err(msg: str) -> None:
