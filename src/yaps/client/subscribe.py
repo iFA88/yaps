@@ -67,12 +67,11 @@ class Subscribe(BaseConnection):
                 if self._data_received is not None:
                     self._data_received(data)
                 else:
-                    print(f'No callback for new data provided!\n{data}')
-
+                    Log.err(f'No callback for new data provided!\n{data}')
             else:
                 # Expecting a ping
                 if not await protocol.cmd_ok(packet, protocol.Commands.PING):
-                    print('Failed to get ping command. Exiting.')
+                    Log.err('Failed to get ping command. Exiting.')
                     return
 
                 # Send a PONG back.

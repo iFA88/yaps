@@ -72,7 +72,7 @@ class Subscription:
             # If PONG, reset timer.
             self._time = 0
         else:
-            print(f'Bad ping! {self._alive} -> {self._state}')
+            Log.err(f'Bad ping! {self._alive} -> {self._state}')
             # If no PONG, advance to next state, and potentially close.
             alive = self._next_state()
             if not alive:
