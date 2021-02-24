@@ -135,4 +135,4 @@ def publish_ok(data: str) -> bool:
 
 
 def get_topic_and_msg(data: str) -> (str, str):
-    return [part.strip() for part in data.split('|')]
+    return [part for part in data.split('|')]
