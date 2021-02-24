@@ -2,23 +2,15 @@ import asyncio
 
 from yaps.api import protocol
 from yaps.utils.log import Log
-from yaps.utils.config import Config
 
 
 class BaseConnection:
 
-    def __init__(self, ip=None, port=None):
-        self._set_value(ip, 'ip')
-        self._set_value(port, 'port')
+    def __init__(self, ip: str, port: int):
+        self._ip = ip
+        self._port = port
         self._reader = None
         self._writer = None
-
-    def _set_value(self, value, name):
-        try:
-            value = Config.get()['server'][name]
-        except KeyError:
-            pass
-        setattr(self, f'_{name}', value)
 
     async def send(self, cmd: int, flags: int = 0, data: bytes = b''):
         if self._writer is not None:
