@@ -2,18 +2,16 @@ import unittest
 import asyncio
 import async_timeout
 
-from client.client import Client
-from utils.log import Log
-from utils.config import Config
+from yaps.client.client import Client
+from yaps.utils.config import Config
 
 
-TEST_TIMEOUT = .2
+TEST_TIMEOUT = 0.2
 
 
 class TestSubscribe(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
-        Log.init()
         self.ip = Config.get()['client']['ip']
         self.port = Config.get()['client']['port']
         self.client = Client(self.ip, self.port)
@@ -22,8 +20,8 @@ class TestSubscribe(unittest.IsolatedAsyncioTestCase):
         await self._test_one_sub('test', 'hello world')
 
     async def test_five_subs(self):
-        data = ['asd123', 'cookiemonster', '  stuff -> stuff',
-                '{}ªßðªø¡@£ł', '\r\n\\a\\«\\»cSTUFF\rr']
+        data = ['asd123', 'cookiemonster', '    stuff -> stuff',
+                '{}ªßðªø¡@£ł', '¡@£]]€¡}£€~', '  space much  space  ']
         for msg in data:
             await self._test_one_sub('test', msg)
 

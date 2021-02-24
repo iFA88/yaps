@@ -1,14 +1,13 @@
 import unittest
 
-from client.client import Client
-from utils.log import Log
-from utils.config import Config
+from yaps.client.client import Client
+from yaps.utils.config import Config
+from yaps.utils.log import Log
 
 
 class TestPublish(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
-        Log.init()
         self.ip = Config.get()['client']['ip']
         self.port = Config.get()['client']['port']
         self.client = Client(self.ip, self.port)
@@ -36,4 +35,5 @@ class TestPublish(unittest.IsolatedAsyncioTestCase):
 
 
 if __name__ == '__main__':
+    Log.disable()
     unittest.main()

@@ -1,8 +1,8 @@
 import unittest
 
-from utils.log import Log
-from server.subscription_container import SubscriptionContainer
-from server.subscription import Subscription
+from yaps.utils.log import Log
+from yaps.server.subscription_container import SubscriptionContainer
+from yaps.server.subscription import Subscription
 
 
 class TestPublish(unittest.TestCase):
