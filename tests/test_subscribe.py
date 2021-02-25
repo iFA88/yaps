@@ -4,6 +4,7 @@ import async_timeout
 
 from yaps.client.client import Client
 from yaps.utils.config import Config
+from yaps.utils.log import Log
 
 
 TEST_TIMEOUT = 0.2
@@ -15,6 +16,7 @@ class TestSubscribe(unittest.IsolatedAsyncioTestCase):
         self.ip = Config.get()['client']['ip']
         self.port = Config.get()['client']['port']
         self.client = Client(self.ip, self.port)
+        Log.disable()
 
     async def test_one_sub(self):
         await self._test_one_sub('test', 'hello world')

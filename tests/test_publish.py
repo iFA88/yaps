@@ -11,6 +11,7 @@ class TestPublish(unittest.IsolatedAsyncioTestCase):
         self.ip = Config.get()['client']['ip']
         self.port = Config.get()['client']['port']
         self.client = Client(self.ip, self.port)
+        Log.disable()
 
     async def test_topics_formats(self):
         # Test different topic formats, which should pass.
@@ -35,5 +36,4 @@ class TestPublish(unittest.IsolatedAsyncioTestCase):
 
 
 if __name__ == '__main__':
-    Log.disable()
     unittest.main()

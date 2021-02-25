@@ -3,7 +3,7 @@ import unittest
 import subprocess
 
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOURCE_CODE = os.path.join(BASE_PATH, 'src')
+SOURCE_CODE = os.path.join(BASE_PATH, 'yaps')
 
 
 class TestFlake8(unittest.TestCase):
