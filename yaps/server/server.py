@@ -23,6 +23,7 @@ class Server:
 
         self._ip = ip
         self._port = port
+        Log.init(server=True)
 
     async def _make_pings(self):
         """ Task that sends pings to all subscriptions in the queue.
@@ -63,6 +64,7 @@ class Server:
     async def _make_publications(self, publication: Publication) -> None:
         """ Sends the publication to all the subscribers of the topic. """
         subs = self._subscriptions.get(publication.topic)
+
         for sub in subs.copy():
             try:
                 pub_ok = await sub.new_data(publication.message)
@@ -116,10 +118,3 @@ def get_address():
                 Config.get()['server']['port'])
     except (TypeError, KeyError):
         return DEFAULT_IP, DEFAULT_PORT
-
-
-if __name__ == '__main__':
-    Log.init()
-    ip, port = get_address()
-    server = Server(ip, port)
-    asyncio.run(server.start())

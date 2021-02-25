@@ -65,7 +65,7 @@ class Subscription:
             If the subscriber doesn't pong back, the subscription is closed.
         """
         await protocol.send_packet(self._writer, protocol.Commands.PING)
-        Log.debug(f'[{self.topic, self.fd}] Ping')
+        Log.debug(f'Ping {self}')
 
         pong = await protocol.read_packet(self._reader)
         if await protocol.cmd_ok(pong, protocol.Commands.PONG):
@@ -135,7 +135,7 @@ class Subscription:
             self.fd = None
 
     def __repr__(self):
-        return f'|{self.topic}:  {self.fd}|'
+        return f'| ID:{self.fd} Topic: {self.topic} |'
 
     def __lt__(self, other):
         return self._time - other._time
