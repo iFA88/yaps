@@ -11,7 +11,7 @@ __all__ = ['Commands', 'read_packet', 'send_packet', 'DELAY_PING_PONG',
 
 
 DELAY_PING_PONG = 1
-PING_PONG_TIMEOUT = 2
+PING_PONG_TIMEOUT = 10
 
 # Regex Formats
 TOPIC_FORMAT = '[a-zA-Z0-9]+[a-zA-Z0-9/]*'
@@ -135,4 +135,6 @@ def publish_ok(data: str) -> bool:
 
 
 def get_topic_and_msg(data: str) -> (str, str):
-    return [part for part in data.split('|')]
+    """ Returns the topic and the message of the data string. """
+    topic, message = data.split('|')
+    return topic[:-1], message[1:]
