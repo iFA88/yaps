@@ -76,6 +76,7 @@ class Subscribe(BaseConnection):
 
                 # Send a PONG back.
                 await self._pong()
+                Log.debug('[Client] Pong')
 
                 # If provided, call pong callback.
                 if self._pong_callback is not None:
