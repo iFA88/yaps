@@ -1,26 +1,28 @@
 import argparse
 import asyncio
 
-from client.client import Client
+from yaps.utils import Log, base_parser
+from yaps.client import Client
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = base_parser()
     parser.add_argument('-t', '--topic', type=str,
                         required=True)
-    parser.add_argument('-i', '--ip', type=str,
-                        required=False, default='127.0.0.1')
-    parser.add_argument('-p', '--port', type=int,
-                        required=False, default=8989)
     return parser.parse_args()
 
 
-async def subscribe(topic: str, ip: str, port: int):
-    client = Client(ip, port)
-    await client.subscribe(topic, lambda msg: print(msg))
+def new_data(message):
+    print(f'New data received: {message}')
+
+
+async def main():
+    args = parse_args()
+    client = Client(args.ip, args.port)
+
+    Log.set_level(args.debug_level)
+    await client.subscribe(args.topic, new_data)
 
 
 if __name__ == '__main__':
-
-    args = parse_args()
-    asyncio.run(subscribe(args.topic, args.ip, args.port))
+    asyncio.run(main())

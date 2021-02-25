@@ -3,8 +3,8 @@ import re
 import os
 
 BASE_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-API_SPEC_PATH = os.path.join(BASE_PATH, 'src', 'api', 'api.json')
-API_PY_PATH = os.path.join(BASE_PATH, 'src', 'api', 'protocol.py')
+API_SPEC_PATH = os.path.join(BASE_PATH, 'etc', 'api.json')
+API_PY_PATH = os.path.join(BASE_PATH, 'yaps', 'src', 'api', 'protocol.py')
 API_JS_PATH = '/home/victor/coding/projects/vqtt/ui/src/components/'\
               'models/vqtt_api.js'
 
