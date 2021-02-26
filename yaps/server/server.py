@@ -9,7 +9,8 @@ from yaps.utils.log import Log
 
 
 NAME = 'YAPS'
-MAKE_PING_DELAY = 1     # In seconds.
+TASK_DELAY_PING = 5     # In seconds.
+TASK_DELAY_PUB = .5     # In seconds.
 
 DEFAULT_IP = '127.0.0.1'
 DEFAULT_PORT = 8999
@@ -19,13 +20,24 @@ class Server:
 
     def __init__(self, ip: str, port: int):
         self._subscriptions = SubscriptionContainer()
+        self._publications = asyncio.Queue()
         self._ping_pong_tasks = asyncio.PriorityQueue()
 
         self._ip = ip
         self._port = port
         Log.init(server=True)
 
-    async def _make_pings(self):
+    async def _check_timeouts(self):
+        """
+            Checks all the subscribers to see if their timer has timed out
+            and puts all the timed out ones in the priority queue.
+        """
+        subs = self._subscriptions.get_all()
+        timed_out_subs = filter(lambda sub: sub.timed_out(), subs)
+        for sub in timed_out_subs:
+            await self._ping_pong_tasks.put(sub)
+
+    async def _make_pings_task(self):
         """ Task that sends pings to all subscriptions in the queue.
             All subs in this queue have timed out.
         """
@@ -49,17 +61,18 @@ class Server:
                     self._ping_pong_tasks.task_done()
 
             # Go idle so other tasks can run.
-            await asyncio.sleep(MAKE_PING_DELAY)
+            await asyncio.sleep(TASK_DELAY_PING)
 
-    async def _check_timeouts(self):
+    async def _make_publications_task(self) -> None:
         """
-            Checks all the subscribers to see if their timer has timed out
-            and puts all the timed out ones in the priority queue.
+            Tasks that runs forever and takes publications from the
+            publication queue and sends them to the subscribers.
         """
-        subs = self._subscriptions.get_all()
-        timed_out_subs = filter(lambda sub: sub.timed_out(), subs)
-        for sub in timed_out_subs:
-            self._ping_pong_tasks.put_nowait(sub)
+        while True:
+            # Get the next publication from the queue and send it.
+            pub = await self._publications.get()
+            await self._make_publications(pub)
+            self._publications.task_done()
 
     async def _make_publications(self, publication: Publication) -> None:
         """ Sends the publication to all the subscribers of the topic. """
@@ -67,6 +80,8 @@ class Server:
 
         for sub in subs.copy():
             try:
+
+                Log.debug(f'[Server] Publishing: {self._publications.qsize()}')
                 pub_ok = await sub.new_data(publication.message)
                 if not pub_ok:
                     self._delete_subscription(sub)
@@ -95,9 +110,11 @@ class Server:
             await self._add_subscription(result.data)
 
         elif result == Publication:
-            await self._make_publications(result.data)
+            # Add new publication to queue
+            await self._publications.put(result.data)
 
         elif result is None:
+            # This should not occur!
             Log.debug('ALERT: Result is None! ')
 
     async def start(self) -> None:
@@ -108,7 +125,8 @@ class Server:
         Log.info(f'{NAME} Server started at {ip} on port {port}')
 
         async with server:
-            await asyncio.gather(self._make_pings(),
+            await asyncio.gather(self._make_pings_task(),
+                                 self._make_publications_task(),
                                  server.serve_forever())
 
 
