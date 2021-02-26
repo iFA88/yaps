@@ -68,7 +68,7 @@ class Subscription:
         Log.debug(f'Ping {self}')
 
         pong = await protocol.read_packet(self._reader)
-        if await protocol.cmd_ok(pong, protocol.Commands.PONG):
+        if await protocol.async_cmd_ok(pong, protocol.Commands.PONG):
             # If PONG, reset timer.
             self._time = 0
         else:
@@ -96,9 +96,9 @@ class Subscription:
 
         if send_ok:
             # If no ACK is recieved, close the connection.
-            if not await protocol.cmd_ok(response,
-                                         protocol.Commands.NEW_DATA_ACK,
-                                         self._writer):
+            if not await protocol.async_cmd_ok(response,
+                                               protocol.Commands.NEW_DATA_ACK,
+                                               self._writer):
                 send_ok = False
 
         if not send_ok:

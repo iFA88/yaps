@@ -2,7 +2,7 @@ import argparse
 import asyncio
 
 from yaps.utils import Log, base_parser
-from yaps.client import Client
+from yaps.client import AsyncClient
 
 
 def parse_args() -> argparse.Namespace:
@@ -16,7 +16,7 @@ def parse_args() -> argparse.Namespace:
 
 async def main():
     args = parse_args()
-    client = Client(args.ip, args.port)
+    client = AsyncClient(args.ip, args.port)
 
     Log.set_level(args.debug_level)
     await client.publish(args.topic, args.message)
