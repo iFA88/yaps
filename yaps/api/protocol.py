@@ -1,13 +1,13 @@
-import asyncio
 import re
 import struct
 
-from yaps.utils.log import Log
-from yaps.api.packet import Packet
+from .async_methods import async_send_packet, async_read_packet, async_cmd_ok
+from .sync_methods import send_packet, read_packet, cmd_ok
 
 
-__all__ = ['Commands', 'read_packet', 'send_packet', 'DELAY_PING_PONG',
-           'PING_PONG_TIMEOUT', 'topic_ok', 'publish_ok']
+__all__ = ['Commands', 'DELAY_PING_PONG', 'PING_PONG_TIMEOUT', 'topic_ok',
+           'publish_ok', 'async_send_packet', 'async_read_packet',
+           'async_cmd_ok', 'send_packet', 'read_packet', 'cmd_ok']
 
 
 DELAY_PING_PONG = 1
@@ -70,60 +70,8 @@ def build_debug_commands():
 build_debug_commands()
 
 
-async def read_packet(reader: asyncio.StreamReader) -> Packet:
-    try:
-        header = await reader.read(Sizes.HEADER)
-        # Log.debug(f'Header: {header}')
-        cmd, flags, length = unpack_header(header)
-        # Log.debug(f'CMD: {cmd} Flags: {flags} Lengt: {length}')
-        data = await reader.read(length)
-        return Packet(cmd, flags, length, data)
-    except struct.error as e:
-        Log.debug(f'Failed to read packet: {e}')
-        return None
-    except RuntimeError:
-        Log.debug('Race condition reading packet.')
-
-
 def unpack_header(header: bytes) -> (int, int, int):
     return struct.unpack(Formats.HEADER, header)
-
-
-async def send_packet(writer: asyncio.StreamWriter,
-                      cmd: int, flags: int = 0, data: bytes = b'') -> None:
-    packet = Packet(cmd, flags, len(data), data, Formats.HEADER)
-
-    # Log.debug(f'Sending packet: {packet}')
-
-    writer.write(packet.to_bytes())
-    await writer.drain()
-
-
-def get_command(self, cmd: int) -> str:
-    return str(cmd)
-
-
-async def cmd_ok(packet: Packet,
-                 cmd: int,
-                 writer: asyncio.StreamWriter = None) -> bool:
-    """
-        Returns true if command is okay, and logs if not.
-        If the command is INCORRECT, a packet is sent to the
-        client with BAD_CMD command.
-    """
-    ok = True
-    if packet is None:
-        Log.debug('Failed to read packet!')
-        ok = False
-    elif packet.cmd != cmd:
-        Log.err('Packet command incorrect! '
-                f'Expected: "{DEBUG_COMMANDS[cmd]}", '
-                f'Got: "{DEBUG_COMMANDS[packet.cmd]}"')
-        if writer is not None:
-            await send_packet(writer, Commands.BAD_CMD)
-        ok = False
-
-    return ok
 
 
 def topic_ok(topic: str) -> bool:

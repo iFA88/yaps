@@ -1,1 +1,1 @@
-from .base_connection import BaseConnection # noqa
+from .packet import Packet # noqa
