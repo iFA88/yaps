@@ -1,4 +1,6 @@
-from yaps.api import BaseConnection, protocol
+from yaps.api import protocol
+from yaps.client.base_connection import BaseConnection
+from yaps.utils import Log
 
 
 class Publish(BaseConnection):
@@ -6,26 +8,34 @@ class Publish(BaseConnection):
     def __init__(self, ip: str, port: int, flags=None):
         super().__init__(ip, port)
 
-    async def start(self, topic: str, message: str) -> bool:
-        # Send: Publish
-        await self.open()
-        await self.send(protocol.Commands.PUBLISH)
+    def start(self, topic: str, message: str) -> bool:
+        success = True
 
-        # Receive: Publish ACK
-        packet = await self.read()
-        if not await protocol.cmd_ok(packet, protocol.Commands.PUBLISH_ACK,
-                                     self._writer):
-            return False
+        try:
+            # Send: Publish
+            self.open()
+            self.send(protocol.Commands.PUBLISH)
 
-        # Send: Publish + Data
-        data = f'{topic} | {message}'.encode('utf-8')
-        await self.send(protocol.Commands.PUBLISH, data=data)
+            # Receive: Publish ACK
+            packet = self.read()
+            if not protocol.cmd_ok(packet, protocol.Commands.PUBLISH_ACK,
+                                   self._writer):
+                success = False
 
-        # Receive: Publish OK
-        pub_ack = await self.read()
-        if not await protocol.cmd_ok(pub_ack, protocol.Commands.PUBLISH_OK):
-            return False
+            if success:
+                # Send: Publish + Data
+                data = f'{topic} | {message}'.encode('utf-8')
+                self.send(protocol.Commands.PUBLISH, data=data)
 
-        await self.close()
+                # Receive: Publish OK
+                pub_ack = self.read()
+                if not protocol.cmd_ok(pub_ack, protocol.Commands.PUBLISH_OK):
+                    success = False
 
-        return True
+        except Exception as e:
+            Log.debug(f'Unknown error: {e}')
+
+        finally:
+            self.close()
+
+        return success
