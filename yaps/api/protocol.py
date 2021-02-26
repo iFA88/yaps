@@ -11,7 +11,7 @@ __all__ = ['Commands', 'read_packet', 'send_packet', 'DELAY_PING_PONG',
 
 
 DELAY_PING_PONG = 1
-PING_PONG_TIMEOUT = 10
+PING_PONG_TIMEOUT = 60
 
 # Regex Formats
 TOPIC_FORMAT = '[a-zA-Z0-9]+[a-zA-Z0-9/]*'
