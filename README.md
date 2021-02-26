@@ -16,7 +16,14 @@
 - [X] Enable wildcard subscribe
 - [X] Configuration file location
 - [X] Create pip package
-- [ ] Fix import & paths with pip-package
+- [X] Fix import & paths with pip-package
+- [X] Put publications in its own queue.
+- [X] Build a *synchronous* client
+- [ ] Write more synchronous tests
+- [ ] Write more comprehensive tests, if possible
+- [ ] Generate docs
+- [ ] Serve docs, github pages?
+- [ ] Write *User Guides*
 - [ ] Do performance tests
 - [ ] Find use cases
 - [ ] *Create stress tests*
@@ -94,7 +101,9 @@ Client connects to server and subscribes:
 | 6-* | Data |
 
 If the command is publish, `Data` consists of `topic` | `message`, where a
-pipe `|`, seperated the topic from the message.
+pipe ` | `, seperated the topic from the message.
+**Note:** The pipe must be followed by a white-space and have a whitespace
+before it.
 
 #### Commands:
 | Command | Value |
