@@ -26,7 +26,6 @@ DEFAULT_DEBUG_LEVEL = logging.DEBUG
 class Log:
 
     _stream = None
-    _disabled = False
 
     @staticmethod
     def _ensure_logdir_exists() -> None:
@@ -35,7 +34,8 @@ class Log:
 
     @staticmethod
     def disable() -> None:
-        Log._disabled = True
+        logging.getLogger('asyncio').disabled = True
+        _log.disabled = True
 
     @staticmethod
     def close() -> None:
@@ -75,25 +75,20 @@ class Log:
 
     @staticmethod
     def info(msg: str) -> None:
-        if not Log._disabled:
-            _log.info(msg)
+        _log.info(msg)
 
     @staticmethod
     def warning(msg: str) -> None:
-        if not Log._disabled:
-            _log.warning(msg)
+        _log.warning(msg)
 
     @staticmethod
     def critical(msg: str) -> None:
-        if not Log._disabled:
-            _log.critical(msg)
+        _log.critical(msg)
 
     @staticmethod
     def err(msg: str) -> None:
-        if not Log._disabled:
-            _log.error(msg)
+        _log.error(msg)
 
     @staticmethod
     def debug(msg: str) -> None:
-        if not Log._disabled:
-            _log.debug(msg)
+        _log.debug(msg)
