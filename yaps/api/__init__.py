@@ -1,1 +1,1 @@
-from .packet import Packet # noqa
+from yaps.api.packet import Packet # noqa
