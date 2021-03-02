@@ -1,6 +1,78 @@
 # YAPS - Yet Another Publish Subscribe protocol
-- *YAPS* will be a publish-subscribe protocol running over TCP/IP.
+- *YAPS* is a publish-subscribe protocol running over TCP/IP.
 - Inspired by MQTT
+
+## User guide
+
+---
+
+## Setup
+`pip install yaps`
+
+## CLI tools
+To use the executables, ensure that yaps is installed which should put *yaps-publish*, *yaps-subscribe* and *yaps-server* available your path.
+
+### Publish
+`yaps-publish --topic weather --message "Very cold today!"`
+
+### Subscribe
+`yaps-publish --topic weather`
+
+
+## Python API
+The client can be used either asynchronous or synchronous.
+
+### Publish Synchronous
+```
+from yaps.client import Client
+
+client = Client('127.0.0.1', 8999)
+client.publish(topic='weather', message='Very cold today!')
+```
+### Subscribe Synchronous
+```
+from yaps.client import Client
+
+client = Client('127.0.0.1', 8999)
+client.subscribe(topic='weather',
+                 data_received=lambda msg: print(f'New data: {msg}'))
+```
+
+### Publish Asynchronous
+```
+import asyncio
+from yaps.client import AsyncClient
+
+client = AsyncClient('127.0.0.1', 8999)
+asyncio.run(client.publish(topic='weather', message='Very cold today!'))
+```
+
+### Subscribe Asynchronous
+```
+import asyncio
+from yaps.client import AsyncClient
+
+client = AsyncClient('127.0.0.1', 8999)
+callback = lambda msg: print(f'New data: {msg}')
+asyncio.run(client.subscribe(topic='test',
+                             data_received=callback))
+```
+
+### Server (Asynchronous only)
+```
+import asyncio
+from yaps.server import Server
+
+server = Server('127.0.0.1', 8999)
+asyncio.run(server.start())
+```
+
+## Logging
+Logging is enabled by default and can be disabled by calling `disable()` on either a client or server.
+You can set the logging level by calling `set_loglevel(string)` with either a string, or an int directly from the `logging` module.
+Logging output is by default directed to both stdin and a log file, located at `~/.yaps` on Unix systems (not 100% sure where this is located in Windows).
+
+---
 
 ## Objectives
 - Create a functional publish-subscribe protocol that is easy to use.
@@ -19,11 +91,9 @@
 - [X] Fix import & paths with pip-package
 - [X] Put publications in its own queue.
 - [X] Build a *synchronous* client
+- [X] Write *User Guides*
 - [ ] Write more synchronous tests
 - [ ] Write more comprehensive tests, if possible
-- [ ] Generate docs
-- [ ] Serve docs, github pages?
-- [ ] Write *User Guides*
 - [ ] Do performance tests
 - [ ] Find use cases
 - [ ] *Create stress tests*
