@@ -119,7 +119,7 @@ Topics must follow:
 - Publishing to `/` is **not** permitted.
 
 ## Security
-
+TODO: fill this
 
 ## Client
 - Publish/Subscribe to different topics.

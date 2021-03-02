@@ -1,14 +1,14 @@
 import setuptools
 
-with open('README.md', 'r', encoding='utf-8') as fh:
+with open('UserGuide.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='yaps-victorhook',
-    version='0.0.8',
+    name='yaps-lib',
+    version='0.0.1',
     author='Victor Krook',
     author_email='victorkrook96@gmail.com',
-    description='A lightweight publish, subscribe protocol api',
+    description='A lightweight publish, subscribe library',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/victorhook/yaps',
@@ -20,13 +20,11 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
     ],
-    entry_points={
-        'console_scripts': [
-            'yaps-server = yaps.scripts.server:main',
-            'yaps-publish = yaps.scripts.publish:main',
-            'yaps-subscribe = yaps.scripts.subscribe:main'
-        ],
-    },
+    scripts=[
+        'yaps/scripts/yaps-publish',
+        'yaps/scripts/yaps-subscribe',
+        'yaps/scripts/yaps-server',
+    ],
     packages=setuptools.find_packages(),
     python_requires='>=3.8',
 )
