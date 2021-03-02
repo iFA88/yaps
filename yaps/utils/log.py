@@ -71,7 +71,9 @@ class Log:
 
     @staticmethod
     def set_level(debug_level: str = None) -> None:
-        _log.setLevel(DEBUG_LEVELS.get(debug_level, DEFAULT_DEBUG_LEVEL))
+        if type(debug_level) is str:
+            debug_level = DEBUG_LEVELS.get(debug_level, DEFAULT_DEBUG_LEVEL)
+        _log.setLevel(debug_level)
 
     @staticmethod
     def info(msg: str) -> None:
