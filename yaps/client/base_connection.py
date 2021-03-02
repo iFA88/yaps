@@ -3,9 +3,10 @@ import io
 
 from yaps.api import protocol, Packet
 from yaps.utils.log import Log
+from yaps.utils.log_user import BasicLogUser
 
 
-class BaseConnection:
+class BaseConnection(BasicLogUser):
 
     def __init__(self, ip: str, port: int):
         self._ip = ip
